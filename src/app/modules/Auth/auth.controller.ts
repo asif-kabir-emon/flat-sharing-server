@@ -59,9 +59,21 @@ const VerifyEmail = catchAsync(async (req, res) => {
     });
 });
 
+const changePassword = catchAsync(async (req, res) => {
+    const result = await AuthServices.changePassword(req.user.id, req.body);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Password changed successfully",
+        data: result,
+    });
+});
+
 export const AuthControllers = {
     loginUser,
     refreshToken,
     sendVerificationEmail,
     VerifyEmail,
+    changePassword,
 };

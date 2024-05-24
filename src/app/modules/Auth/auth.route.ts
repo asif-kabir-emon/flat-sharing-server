@@ -28,4 +28,11 @@ router.post(
     AuthControllers.VerifyEmail
 );
 
+router.post(
+    "/change-password",
+    auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+    validateRequest(AuthValidations.userChangePasswordValidationSchema),
+    AuthControllers.changePassword
+);
+
 export const AuthRoutes = router;

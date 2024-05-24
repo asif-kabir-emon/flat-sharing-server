@@ -159,9 +159,51 @@ const verifyEmail = async (userId: string, otp: string) => {
     return;
 };
 
+const changePassword = async (userId: string, payload: any) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userId,
+        },
+    });
+
+    const isPasswordMatch = await bcrypt.compare(
+        payload.oldPassword,
+        user.password
+    );
+
+    if (!isPasswordMatch) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid password!");
+    }
+
+    if (payload.oldPassword === payload.confirmPassword) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "New password should not be same as old password"
+        );
+    }
+
+    const hashedPassword = await bcrypt.hash(
+        payload.newPassword,
+        config.salt_rounds
+    );
+
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            password: hashedPassword,
+            needChangePassword: false,
+        },
+    });
+
+    return;
+};
+
 export const AuthServices = {
     loginUserIntoDB,
     refreshToken,
     sendVerificationEmail,
     verifyEmail,
+    changePassword,
 };
