@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  role               USER_ROLE @default(USER)
+  needChangePassword Boolean   @default(true)
+  isActive           Boolean   @default(true)
+  isVerified         Boolean   @default(false)
+  isDeleted          Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  userProfile UserProfile?
+  otps        OTP[]
+  bookings    Booking[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  name       String?
+  bio        String?
+  profession String?
+  address    String?
+  profilePhoto String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
+}
+
+model OTP {
+  userId    String  @unique
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("otps")
+}
+
+model Flat {
+  id                   String   @id @default(uuid())
+  squareFeet           Int
+  totalBedrooms        Int
+  totalRooms           Int
+  utilitiesDescription String
+  location             String
+  description          String
+  rent                 Int
+  availability         Boolean  @default(true)
+  advanceAmount        Int
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@map("flats")
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  flatId    String
+  userId    String
+  status    BookingStatus
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  flat Flat @relation(fields: [flatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  BOOKED
+  REJECTED
+}
+
+enum USER_ROLE {
+  USER
+  ADMIN
+}
