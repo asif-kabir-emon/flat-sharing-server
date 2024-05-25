@@ -3,8 +3,11 @@ import ApiError from "../../errors/ApiError";
 import prisma from "../../utils/prisma";
 import bcrypt from "bcrypt";
 import config from "../../config";
-import { TCreateUser } from "./user.interface";
-import { USER_ROLE } from "@prisma/client";
+import { TCreateUser, TUserFilterRequest } from "./user.interface";
+import { Prisma, USER_ROLE } from "@prisma/client";
+import { TPaginationOptions } from "../../interfaces/pagination";
+import { paginationHelper } from "../../helpers/paginationHelper";
+import { userSortableFields } from "./user.constant";
 
 const registerUserIntoDB = async (payload: TCreateUser) => {
     // check if user already exist with this email
@@ -97,13 +100,117 @@ const updateProfileIntoDB = async (
 };
 
 const getMyProfileFromDB = async (userId: string) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userId,
+            isActive: true,
+        },
+        select: {
+            email: true,
+            role: true,
+            isActive: true,
+            isVerified: true,
+        },
+    });
+
     const result = await prisma.userProfile.findUniqueOrThrow({
         where: {
             userId: userId,
         },
     });
 
-    return result;
+    return {
+        ...result,
+        ...user,
+    };
+};
+
+const getAllUsersFromDB = async (
+    params: TUserFilterRequest,
+    options: TPaginationOptions
+) => {
+    const { searchTerm, name, ...filterData } = params;
+    let { limit, page, skip, sortBy, sortOrder } =
+        paginationHelper.calculatePagination(options);
+
+    if (sortBy && !userSortableFields.includes(sortBy)) {
+        sortBy = "createdAt";
+        sortOrder = "desc";
+    }
+
+    const andConditions: Prisma.UserWhereInput[] = [];
+
+    if (searchTerm) {
+        andConditions.push({
+            OR: [
+                {
+                    email: {
+                        contains: searchTerm,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    userProfile: {
+                        name: {
+                            contains: searchTerm,
+                            mode: "insensitive",
+                        },
+                    },
+                },
+            ],
+        });
+    }
+    if (Object.keys(filterData).length) {
+        andConditions.push({
+            AND: Object.keys(filterData).map((key) => ({
+                [key]: {
+                    equals: (filterData as any)[key],
+                },
+            })),
+        });
+    }
+
+    andConditions.push({
+        isDeleted: false,
+    });
+
+    if (name) {
+        andConditions.push({
+            userProfile: {
+                name: {
+                    contains: name,
+                    mode: "insensitive",
+                },
+            },
+        });
+    }
+
+    const whereConditions: Prisma.UserWhereInput = { AND: andConditions };
+
+    const result = await prisma.user.findMany({
+        where: whereConditions,
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder,
+        },
+        include: {
+            userProfile: true,
+        },
+    });
+
+    const total = await prisma.user.count({
+        where: whereConditions,
+    });
+
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 };
 
 export const UserServices = {
@@ -111,4 +218,5 @@ export const UserServices = {
     getUserProfileFromDB,
     updateProfileIntoDB,
     getMyProfileFromDB,
+    getAllUsersFromDB,
 };

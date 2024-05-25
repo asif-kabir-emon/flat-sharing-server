@@ -6,6 +6,7 @@ import config from "../../config";
 import { jwtHelper } from "../../helpers/jwtHelper";
 import sendEmail from "../../utils/sendEmail";
 import generateOTP from "../../helpers/otpGenerator";
+import { TChangePassword } from "./auth.interface";
 
 const loginUserIntoDB = async (payload: any) => {
     // check if user exist with this email
@@ -159,7 +160,14 @@ const verifyEmail = async (userId: string, otp: string) => {
     return;
 };
 
-const changePassword = async (userId: string, payload: any) => {
+const changePassword = async (userId: string, payload: TChangePassword) => {
+    if (payload.oldPassword === payload.newPassword) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "New password should not be same as old password"
+        );
+    }
+
     const user = await prisma.user.findUniqueOrThrow({
         where: {
             id: userId,
@@ -173,13 +181,6 @@ const changePassword = async (userId: string, payload: any) => {
 
     if (!isPasswordMatch) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid password!");
-    }
-
-    if (payload.oldPassword === payload.confirmPassword) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "New password should not be same as old password"
-        );
     }
 
     const hashedPassword = await bcrypt.hash(

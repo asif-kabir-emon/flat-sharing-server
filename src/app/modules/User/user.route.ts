@@ -14,12 +14,14 @@ router.post(
 );
 
 router.get(
-    "/my-profile",
+    "/me",
     auth(USER_ROLE.ADMIN, USER_ROLE.USER),
     userControllers.getMyProfile
 );
 
 router.get("/profile", auth(USER_ROLE.ADMIN), userControllers.getUserProfile);
+
+router.get("/", auth(USER_ROLE.ADMIN), userControllers.getAllUsers);
 
 router.put(
     "/profile",

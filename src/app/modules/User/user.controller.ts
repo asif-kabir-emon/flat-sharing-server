@@ -2,7 +2,8 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { UserServices } from "./user.service";
-import { fieldsToUpdate } from "./user.constant";
+import { fieldsToUpdate, userSearchableFields } from "./user.constant";
+import { pick } from "../../utils/pick";
 
 const registerUser = catchAsync(async (req, res) => {
     const result = await UserServices.registerUserIntoDB(req.body);
@@ -56,9 +57,23 @@ const getMyProfile = catchAsync(async (req, res) => {
     });
 });
 
+const getAllUsers = catchAsync(async (req, res) => {
+    const filters = pick(req.query, userSearchableFields);
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = await UserServices.getAllUsersFromDB(filters, options);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "All users retrieved successfully",
+        data: result,
+    });
+});
+
 export const userControllers = {
     registerUser,
     getUserProfile,
     updateUserProfile,
     getMyProfile,
+    getAllUsers,
 };
