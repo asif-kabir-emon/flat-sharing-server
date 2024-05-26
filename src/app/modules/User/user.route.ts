@@ -30,4 +30,18 @@ router.put(
     userControllers.updateUserProfile
 );
 
+router.put(
+    "/role/:userId",
+    auth(USER_ROLE.ADMIN),
+    validateRequest(UserValidations.userRoleUpdateValidationSchema),
+    userControllers.updateUserRole
+);
+
+router.put(
+    "/status/:userId",
+    auth(USER_ROLE.ADMIN),
+    validateRequest(UserValidations.userStatusUpdateValidationSchema),
+    userControllers.updateUserStatus
+);
+
 export const UserRoutes = router;

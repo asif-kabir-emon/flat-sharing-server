@@ -70,10 +70,40 @@ const getAllUsers = catchAsync(async (req, res) => {
     });
 });
 
+const updateUserRole = catchAsync(async (req, res) => {
+    const result = await UserServices.updateUserRoleIntoDB(
+        req.params.userId,
+        req.body.role
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User role updated successfully",
+        data: result,
+    });
+});
+
+const updateUserStatus = catchAsync(async (req, res) => {
+    const result = await UserServices.updateUserStatusIntoDB(
+        req.params.userId,
+        req.body.isActive
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User status updated successfully",
+        data: result,
+    });
+});
+
 export const userControllers = {
     registerUser,
     getUserProfile,
     updateUserProfile,
     getMyProfile,
     getAllUsers,
+    updateUserRole,
+    updateUserStatus,
 };

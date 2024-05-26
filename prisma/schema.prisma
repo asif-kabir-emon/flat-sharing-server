@@ -22,6 +22,7 @@ model User {
   userProfile UserProfile?
   otps        OTP[]
   bookings    Booking[]
+  userFlats   UserFlat[]
 
   @@map("users")
 }
@@ -53,6 +54,18 @@ model OTP {
   @@map("otps")
 }
 
+model UserFlat {
+  flatId    String
+  userId    String 
+
+  @@id([flatId, userId])
+
+  flat Flat @relation(fields: [flatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_flats")
+}
+
 model Flat {
   id                   String   @id @default(uuid())
   squareFeet           Int
@@ -60,12 +73,17 @@ model Flat {
   totalRooms           Int
   utilitiesDescription String
   location             String
+  mapLocation          String[]
   description          String
   rent                 Int
   availability         Boolean  @default(true)
   advanceAmount        Int
+  photos               String[]
+  isDeleted            Boolean  @default(false)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  userFlats UserFlat[]
 
   bookings Booking[]
 

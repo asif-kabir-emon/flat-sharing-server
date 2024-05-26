@@ -1,3 +1,4 @@
+import { USER_ROLE } from "@prisma/client";
 import { z } from "zod";
 
 const userRegisterValidationSchema = z.object({
@@ -35,7 +36,27 @@ const userProfileUpdateValidationSchema = z.object({
     }),
 });
 
+const userRoleUpdateValidationSchema = z.object({
+    body: z.object({
+        role: z
+            .enum([USER_ROLE.USER, USER_ROLE.ADMIN], {
+                required_error: "Role is required.",
+            })
+            .transform((val) => val.toUpperCase()),
+    }),
+});
+
+const userStatusUpdateValidationSchema = z.object({
+    body: z.object({
+        isActive: z.boolean({
+            required_error: "isActive is required.",
+        }),
+    }),
+});
+
 export const UserValidations = {
     userRegisterValidationSchema,
     userProfileUpdateValidationSchema,
+    userRoleUpdateValidationSchema,
+    userStatusUpdateValidationSchema,
 };

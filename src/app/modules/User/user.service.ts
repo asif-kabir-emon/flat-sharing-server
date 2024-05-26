@@ -213,10 +213,68 @@ const getAllUsersFromDB = async (
     };
 };
 
+const updateUserRoleIntoDB = async (userId: string, role: USER_ROLE) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userId,
+            isDeleted: false,
+        },
+    });
+
+    if (user.role === role) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role is already same.");
+    }
+
+    const result = await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            role,
+        },
+    });
+
+    if (!result || result.role !== role) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role failed to update.");
+    }
+
+    return result;
+};
+
+const updateUserStatusIntoDB = async (userId: string, isActive: boolean) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userId,
+            isDeleted: false,
+        },
+    });
+
+    if (user.isActive === isActive) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Status is already same.");
+    }
+
+    const result = await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            isActive,
+        },
+    });
+
+    if (!result || result.isActive !== isActive) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Status failed to update.");
+    }
+
+    return result;
+};
+
 export const UserServices = {
     registerUserIntoDB,
     getUserProfileFromDB,
-    updateProfileIntoDB,
     getMyProfileFromDB,
     getAllUsersFromDB,
+    updateProfileIntoDB,
+    updateUserRoleIntoDB,
+    updateUserStatusIntoDB,
 };
