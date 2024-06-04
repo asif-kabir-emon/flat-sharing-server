@@ -7,7 +7,7 @@
 1. **Clone the GitHub Repository on local machine:**
     
     ```sh
-    git clone https://github.com/Porgramming-Hero-web-course/l2-b2-fullstack-track-assignment-8-asif-kabir-emon.git
+    git clone https://github.com/asif-kabir-emon/flat-sharing-server.git
     ```
 
 2. **Install dependencies:**
