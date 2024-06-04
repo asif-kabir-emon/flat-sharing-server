@@ -44,4 +44,11 @@ router.put(
     userControllers.updateUserStatus
 );
 
+router.put(
+    "/change-email",
+    auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+    validateRequest(UserValidations.changeEmailValidationSchema),
+    userControllers.changeEmail
+);
+
 export const UserRoutes = router;

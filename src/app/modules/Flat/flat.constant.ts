@@ -1,8 +1,10 @@
 export const flatSearchableFields = [
     "searchTerm",
     "location",
-    "description",
-    "utilitiesDescription",
+    "minRent",
+    "maxRent",
+    "minBedrooms",
+    "maxBedrooms",
 ];
 
 export const flatSortableFields = [
@@ -12,3 +14,5 @@ export const flatSortableFields = [
     "totalRooms",
     "totalBedrooms",
 ];
+
+export const flatSearchTermFields = ["location"];

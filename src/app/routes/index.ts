@@ -19,7 +19,7 @@ const moduleRoutes = [
         route: FlatRoutes,
     },
     {
-        path: "/",
+        path: "/bookings",
         route: BookingRoutes,
     },
 ];

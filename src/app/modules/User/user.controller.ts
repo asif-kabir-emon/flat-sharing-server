@@ -98,6 +98,21 @@ const updateUserStatus = catchAsync(async (req, res) => {
     });
 });
 
+const changeEmail = catchAsync(async (req, res) => {
+    const result = await UserServices.changeEmailIntoDB(
+        req.user,
+        req.body.newEmail,
+        req.body.otp
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Email changed successfully",
+        data: result,
+    });
+});
+
 export const userControllers = {
     registerUser,
     getUserProfile,
@@ -106,4 +121,5 @@ export const userControllers = {
     getAllUsers,
     updateUserRole,
     updateUserStatus,
+    changeEmail,
 };

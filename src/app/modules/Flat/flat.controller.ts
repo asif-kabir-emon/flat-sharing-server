@@ -6,8 +6,8 @@ import { pick } from "../../utils/pick";
 import { flatSearchableFields } from "./flat.constant";
 
 const addFlat = catchAsync(async (req, res) => {
-    const { user } = req;
-    const result = await FlatServices.addFlatIntoDB(user, req.body);
+    console.log("req.body", req.body);
+    const result = await FlatServices.addFlatIntoDB(req);
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
@@ -18,10 +18,9 @@ const addFlat = catchAsync(async (req, res) => {
 });
 
 const updateFlat = catchAsync(async (req, res) => {
-    const { user } = req;
     const { flatId } = req.params;
     const result = await FlatServices.updateFlatInfoIntoDB(
-        user,
+        req.user.id,
         flatId,
         req.body
     );
@@ -43,8 +42,61 @@ const getAllFlats = catchAsync(async (req, res) => {
         statusCode: httpStatus.OK,
         success: true,
         message: "Flats retrieved successfully",
-        meta: result.meta,
-        data: result.data,
+        data: result,
+    });
+});
+
+const removeFlatPhotos = catchAsync(async (req, res) => {
+    const { flatId } = req.params;
+    const { photos } = req.body;
+    const { id } = req.user;
+    const result = await FlatServices.removePhotosFromDB(id, flatId, photos);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Photos removed successfully",
+        data: result,
+    });
+});
+
+const getMyFlats = catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const options = pick(req.query, ["limit", "page"]);
+    const result = await FlatServices.getMyFlatsFromDB(id, options);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Flats retrieved successfully",
+        data: result,
+    });
+});
+
+const deleteSingleFlat = catchAsync(async (req, res) => {
+    const { flatId } = req.params;
+    const result = await FlatServices.deleteSingleFlatFromDB(
+        req.user.id,
+        flatId
+    );
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Flat deleted successfully",
+        data: result,
+    });
+});
+
+const getFlatById = catchAsync(async (req, res) => {
+    const { flatId } = req.params;
+    const result = await FlatServices.getFlatByIdFromDB(flatId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Flat retrieved successfully",
+        data: result,
     });
 });
 
@@ -52,4 +104,8 @@ export const FlatControllers = {
     addFlat,
     updateFlat,
     getAllFlats,
+    removeFlatPhotos,
+    getMyFlats,
+    deleteSingleFlat,
+    getFlatById,
 };

@@ -4,10 +4,10 @@ import ApiError from "../../errors/ApiError";
 import httpStatus from "http-status";
 import { BookingStatus } from "@prisma/client";
 
-const flatBookingIntoDB = async (user: JwtPayload, flatId: string) => {
+const flatBookingIntoDB = async (user: JwtPayload, data: any) => {
     const isFlatExist = await prisma.flat.findUniqueOrThrow({
         where: {
-            id: flatId,
+            id: data.flatId,
             availability: true,
         },
     });
@@ -19,10 +19,26 @@ const flatBookingIntoDB = async (user: JwtPayload, flatId: string) => {
         );
     }
 
+    const isUserFlatOwner = await prisma.userFlat.findFirst({
+        where: {
+            userId: user.id,
+            flatId: data.flatId,
+        },
+    });
+
+    if (isUserFlatOwner) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "You can't book your own flat"
+        );
+    }
+
     const result = await prisma.booking.create({
         data: {
-            flatId: flatId,
+            flatId: data.flatId,
             userId: user.id,
+            message: data?.message,
+            contactNumber: data.contactNumber,
             status: BookingStatus.PENDING,
         },
     });
@@ -38,9 +54,33 @@ const flatBookingIntoDB = async (user: JwtPayload, flatId: string) => {
 };
 
 const getBookingRequestsFromDB = async (user: JwtPayload) => {
-    const result = await prisma.booking.findMany({
+    const flatUser = await prisma.userFlat.findMany({
         where: {
             userId: user.id,
+        },
+    });
+
+    const flatIds = flatUser.map((flat) => flat.flatId);
+
+    if (!flatIds.length) {
+        return;
+    }
+
+    const result = await prisma.booking.findMany({
+        where: {
+            flatId: {
+                in: flatIds,
+            },
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    email: true,
+                    userProfile: true,
+                },
+            },
+            flat: true,
         },
     });
 
@@ -48,17 +88,47 @@ const getBookingRequestsFromDB = async (user: JwtPayload) => {
 };
 
 const updateBookingStatusIntoDB = async (
+    userId: string,
     bookingId: string,
     bookingStatus: BookingStatus
 ) => {
-    await prisma.booking.findUniqueOrThrow({
+    const booking = await prisma.booking.findUniqueOrThrow({
         where: {
             id: bookingId,
         },
     });
 
-    const result = await prisma.$transaction(async (transactionClient) => {
-        const booking = await transactionClient.booking.update({
+    const userFlat = await prisma.userFlat.findUniqueOrThrow({
+        where: {
+            flatId_userId: {
+                flatId: booking.flatId,
+                userId: userId,
+            },
+        },
+    });
+
+    if (userFlat?.userId !== userId) {
+        throw new ApiError(
+            httpStatus.FORBIDDEN,
+            "You are not authorized to update the booking status"
+        );
+    }
+
+    if (booking.status === BookingStatus.BOOKED) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "You can't update the status of a booked flat"
+        );
+    }
+    if (booking.status === BookingStatus.REJECTED) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "You can't reject the booking request"
+        );
+    }
+
+    const result = await prisma.$transaction(async (tsc) => {
+        const booking = await tsc.booking.update({
             where: {
                 id: bookingId,
             },
@@ -68,7 +138,7 @@ const updateBookingStatusIntoDB = async (
         });
 
         if (bookingStatus === BookingStatus.BOOKED) {
-            await transactionClient.flat.update({
+            await tsc.flat.update({
                 where: {
                     id: booking.flatId,
                 },

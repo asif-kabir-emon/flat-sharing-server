@@ -8,6 +8,7 @@ import { Prisma, USER_ROLE } from "@prisma/client";
 import { TPaginationOptions } from "../../interfaces/pagination";
 import { paginationHelper } from "../../helpers/paginationHelper";
 import { userSortableFields } from "./user.constant";
+import { JwtPayload } from "jsonwebtoken";
 
 const registerUserIntoDB = async (payload: TCreateUser) => {
     // check if user already exist with this email
@@ -269,6 +270,47 @@ const updateUserStatusIntoDB = async (userId: string, isActive: boolean) => {
     return result;
 };
 
+const changeEmailIntoDB = async (
+    user: JwtPayload,
+    newEmail: string,
+    otp: string
+) => {
+    if (user.role !== USER_ROLE.USER) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized.");
+    }
+
+    await prisma.oTP.findUniqueOrThrow({
+        where: {
+            userId: user.id,
+            otp: otp,
+            expiresAt: {
+                gte: new Date(),
+            },
+        },
+    });
+
+    const isEmailExist = await prisma.user.findFirst({
+        where: {
+            email: newEmail,
+        },
+    });
+
+    if (isEmailExist) {
+        throw new ApiError(httpStatus.CONFLICT, "Email already exist.");
+    }
+
+    const result = await prisma.user.update({
+        where: {
+            id: user.id,
+        },
+        data: {
+            email: newEmail,
+        },
+    });
+
+    return result;
+};
+
 export const UserServices = {
     registerUserIntoDB,
     getUserProfileFromDB,
@@ -277,4 +319,5 @@ export const UserServices = {
     updateProfileIntoDB,
     updateUserRoleIntoDB,
     updateUserStatusIntoDB,
+    changeEmailIntoDB,
 };

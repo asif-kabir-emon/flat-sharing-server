@@ -3,21 +3,26 @@ import { BookingControllers } from "./booking.controller";
 import auth from "../../middlewares/auth";
 import validateRequest from "../../middlewares/validateRequest";
 import { BookingValidations } from "./booking.validation";
+import { USER_ROLE } from "@prisma/client";
 
 const router = express.Router();
 
 router.post(
-    "/booking-applications",
-    auth(),
+    "/booking-application",
+    auth(USER_ROLE.USER),
     validateRequest(BookingValidations.flatBookingRequestValidationSchema),
     BookingControllers.flatBooking
 );
 
-router.get("/booking-requests", auth(), BookingControllers.getBookingRequests);
+router.get(
+    "/booking-requests",
+    auth(USER_ROLE.USER),
+    BookingControllers.getBookingRequests
+);
 
 router.put(
     "/booking-requests/:bookingId",
-    auth(),
+    auth(USER_ROLE.USER),
     BookingControllers.updateBookingStatus
 );
 

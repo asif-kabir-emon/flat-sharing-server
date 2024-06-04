@@ -54,9 +54,32 @@ const userStatusUpdateValidationSchema = z.object({
     }),
 });
 
+const changeEmailValidationSchema = z.object({
+    body: z.object({
+        newEmail: z
+            .string({
+                required_error: "Email is required.",
+            })
+            .email({
+                message: "Invalid email.",
+            }),
+        otp: z
+            .string({
+                required_error: "OTP is required.",
+            })
+            .min(6, {
+                message: "OTP is too short.",
+            })
+            .max(6, {
+                message: "OTP is too long.",
+            }),
+    }),
+});
+
 export const UserValidations = {
     userRegisterValidationSchema,
     userProfileUpdateValidationSchema,
     userRoleUpdateValidationSchema,
     userStatusUpdateValidationSchema,
+    changeEmailValidationSchema,
 };

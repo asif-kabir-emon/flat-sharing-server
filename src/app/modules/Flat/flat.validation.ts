@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { map, z } from "zod";
 
 const createFlatValidationSchema = z.object({
     body: z.object({
@@ -38,6 +38,12 @@ const createFlatValidationSchema = z.object({
         location: z.string({
             required_error: "Location is required.",
         }),
+        mapLocation: z
+            .array(z.number())
+            .length(2, {
+                message: "Map location must have 2 values.",
+            })
+            .optional(),
         description: z.string({
             required_error: "Description is required.",
         }),
@@ -117,7 +123,16 @@ const updateFlatValidationSchema = z.object({
     }),
 });
 
+const removeFlatPhotosValidationSchema = z.object({
+    body: z.object({
+        photos: z.array(z.string(), {
+            required_error: "Photos are required.",
+        }),
+    }),
+});
+
 export const FlatValidations = {
     createFlatValidationSchema,
     updateFlatValidationSchema,
+    removeFlatPhotosValidationSchema,
 };

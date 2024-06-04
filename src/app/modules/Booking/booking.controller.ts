@@ -4,9 +4,8 @@ import sendResponse from "../../utils/sendResponse";
 import { BookingServices } from "./booking.service";
 
 const flatBooking = catchAsync(async (req, res) => {
-    const { flatId } = req.body;
     const { user } = req;
-    const result = await BookingServices.flatBookingIntoDB(user, flatId);
+    const result = await BookingServices.flatBookingIntoDB(user, req.body);
 
     sendResponse(res, {
         success: true,
@@ -32,6 +31,7 @@ const updateBookingStatus = catchAsync(async (req, res) => {
     const { bookingId } = req.params;
     const { status } = req.body;
     const result = await BookingServices.updateBookingStatusIntoDB(
+        req.user.id,
         bookingId,
         status
     );
